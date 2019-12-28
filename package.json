@@ -1,6 +1,6 @@
 {
   "name": "xorwow-js",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "JavaScript implementation of the xorwow pseudo-random number generator",
   "main": "xorwow",
   "typings": "xorwow",
@@ -17,6 +17,7 @@
   "license": "MIT",
   "homepage": "https://github.com/jaredkrinke/xorwow-js#readme",
   "devDependencies": {
+    "@types/assert": "^1.4.3",
     "@types/mocha": "^5.2.7",
     "assert": "^2.0.0",
     "mocha": "^6.2.2",
