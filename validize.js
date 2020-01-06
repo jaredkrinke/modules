@@ -2,7 +2,10 @@
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 // TODO: Arrays
+const ok = 200;
 const badRequest = 400;
+const notFound = 404;
+const internalServerError = 500;
 const trace = (((_b = (_a = process) === null || _a === void 0 ? void 0 : _a.env) === null || _b === void 0 ? void 0 : _b.VALIDIZE_TRACE) === "1");
 class ValidationError extends Error {
     constructor(message) {
@@ -10,12 +13,18 @@ class ValidationError extends Error {
     }
 }
 exports.ValidationError = ValidationError;
+class NotFoundError extends Error {
+    constructor(message) {
+        super(message);
+    }
+}
+exports.NotFoundError = NotFoundError;
 function createOptionalValidator(validateExistingValue) {
     return function (x) {
-        if (x === undefined) {
+        if (x === undefined || x === null) {
             return undefined;
         }
-        else {
+        else if (validateExistingValue !== undefined) {
             return validateExistingValue(x);
         }
     };
@@ -108,20 +117,56 @@ function createValidator(validator) {
     };
 }
 exports.createValidator = createValidator;
-function validate(validateInput) {
-    return async function (context, next) {
+const validateEmpty = createValidator({});
+function handle(options) {
+    // Note: Assuming no next middleware
+    const validateRouteParameters = options.validateParameters || validateEmpty;
+    const validateRequestQuery = options.validateQuery || validateEmpty;
+    const validateRequestBody = options.validateBody || validateEmpty;
+    return async function (context) {
+        var _a, _b;
+        // Validate input
         try {
-            validateInput(context);
+            const validatedInput = {
+                parameters: validateRouteParameters(context.params),
+                query: validateRequestQuery(context.query),
+                body: validateRequestBody(((_b = (_a = context) === null || _a === void 0 ? void 0 : _a.request) === null || _b === void 0 ? void 0 : _b.body) || {})
+            };
+            // Process the validated input
+            try {
+                const response = await options.process(validatedInput, context);
+                if (response === undefined) {
+                    context.body = "";
+                }
+                else {
+                    context.body = JSON.stringify(response);
+                }
+                context.status = ok;
+            }
+            catch (e) {
+                // Report errors
+                context.body = "";
+                if (e instanceof NotFoundError) {
+                    context.status = notFound;
+                }
+                else if (e instanceof ValidationError) {
+                    context.status = badRequest;
+                }
+                else {
+                    context.status = internalServerError;
+                }
+                if (trace) {
+                    console.error(`Failed (${context.stats}): ${e.message}`);
+                }
+            }
         }
-        catch (err) {
+        catch (e) {
             if (trace) {
-                console.error(err);
+                console.error(`Validation failed: ${e.message}`);
             }
             context.status = badRequest;
             context.body = "";
-            return;
         }
-        return await next();
     };
 }
-exports.validate = validate;
+exports.handle = handle;
