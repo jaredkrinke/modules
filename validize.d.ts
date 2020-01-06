@@ -2,6 +2,7 @@ import * as Koa from "koa";
 export declare class ValidationError extends Error {
     constructor(message: string);
 }
+export declare function createOptionalValidator<T>(validateExistingValue: (x: unknown) => T): (x: unknown) => T;
 export declare function createStringValidator(pattern: RegExp): (x: unknown) => string;
 export declare function createFloatValidator(min: number, max: number, coerce?: boolean): (x: unknown) => number;
 export declare function createIntegerValidator(min: number, max: number, coerce?: boolean): (x: unknown) => number;

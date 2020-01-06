@@ -1,6 +1,8 @@
 "use strict";
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
+// TODO: Arrays
+// TODO: Booleans
 const badRequest = 400;
 const trace = (((_b = (_a = process) === null || _a === void 0 ? void 0 : _a.env) === null || _b === void 0 ? void 0 : _b.VALIDIZE_TRACE) === "1");
 class ValidationError extends Error {
@@ -9,6 +11,17 @@ class ValidationError extends Error {
     }
 }
 exports.ValidationError = ValidationError;
+function createOptionalValidator(validateExistingValue) {
+    return function (x) {
+        if (x === undefined) {
+            return undefined;
+        }
+        else {
+            return validateExistingValue(x);
+        }
+    };
+}
+exports.createOptionalValidator = createOptionalValidator;
 function createStringValidator(pattern) {
     return function (x) {
         if (typeof (x) === "string" && pattern.test(x)) {
@@ -55,23 +68,20 @@ function createValidator(validator) {
     return function (input) {
         if (typeof (input) === "object") {
             let result = {};
+            for (let key in validator) {
+                const fieldName = key;
+                const validatedValue = validator[fieldName](input[fieldName]);
+                if (validatedValue !== undefined) {
+                    result[fieldName] = validatedValue;
+                }
+            }
             for (let key in input) {
                 if (typeof (key) !== "string") {
                     throw new ValidationError("Invalid field");
                 }
                 const fieldName = key;
-                const fieldValidator = validator[fieldName];
-                if (!fieldValidator) {
+                if (validator[fieldName] === undefined) {
                     throw new ValidationError("Extraneous field");
-                }
-                result[fieldName] = fieldValidator(input[fieldName]);
-            }
-            for (let key in validator) {
-                if (typeof (key) === "string") {
-                    const fieldName = key;
-                    if (input[fieldName] === undefined || input[fieldName] === null) {
-                        throw new ValidationError("Missing field");
-                    }
                 }
             }
             return result;
