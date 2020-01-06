@@ -1,5 +1,8 @@
 "use strict";
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
+const badRequest = 400;
+const trace = (((_b = (_a = process) === null || _a === void 0 ? void 0 : _a.env) === null || _b === void 0 ? void 0 : _b.VALIDIZE_TRACE) === "1");
 class ValidationError extends Error {
     constructor(message) {
         super(message);
@@ -79,3 +82,20 @@ function createValidator(validator) {
     };
 }
 exports.createValidator = createValidator;
+function validate(validateInput) {
+    return async function (context, next) {
+        try {
+            validateInput(context);
+        }
+        catch (err) {
+            if (trace) {
+                console.error(err);
+            }
+            context.status = badRequest;
+            context.body = "";
+            return;
+        }
+        return await next();
+    };
+}
+exports.validate = validate;

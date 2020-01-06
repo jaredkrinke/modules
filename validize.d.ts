@@ -1,3 +1,4 @@
+import * as Koa from "koa";
 export declare class ValidationError extends Error {
     constructor(message: string);
 }
@@ -8,3 +9,4 @@ export declare type ValidatorMap<T> = {
     [P in keyof T]: (input: unknown) => T[P];
 };
 export declare function createValidator<T>(validator: ValidatorMap<T>): (input: unknown) => T;
+export declare function validate(validateInput: (context: Koa.Context) => void): Koa.Middleware;
