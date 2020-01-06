@@ -2,7 +2,6 @@
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 // TODO: Arrays
-// TODO: Booleans
 const badRequest = 400;
 const trace = (((_b = (_a = process) === null || _a === void 0 ? void 0 : _a.env) === null || _b === void 0 ? void 0 : _b.VALIDIZE_TRACE) === "1");
 class ValidationError extends Error {
@@ -64,6 +63,23 @@ function createIntegerValidator(min, max, coerce) {
     };
 }
 exports.createIntegerValidator = createIntegerValidator;
+function createBooleanValidator(coerce) {
+    return function (x) {
+        if (typeof (x) === "boolean") {
+            return x;
+        }
+        else if (coerce === true && typeof (x) === "string") {
+            if (x === "true") {
+                return true;
+            }
+            else if (x === "false") {
+                return false;
+            }
+        }
+        throw new ValidationError("Invalid Boolean");
+    };
+}
+exports.createBooleanValidator = createBooleanValidator;
 function createValidator(validator) {
     return function (input) {
         if (typeof (input) === "object") {
